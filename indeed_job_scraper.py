@@ -148,7 +148,7 @@ if __name__ == '__main__':
     # job search settings
     title = 'Data Scientist'
     loc = 'Charlotte NC'
-    path = 'data_scientist_jobs.csv'
+    path = 'indeed_results.csv'
 
     # include email settings if you want to email the file
     # currently setup for GMAIL... see notes above.
