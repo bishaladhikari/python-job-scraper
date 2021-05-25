@@ -12,7 +12,7 @@ EmailCredentials = namedtuple("EmailCredentials", ['username', 'password', 'send
 
 
 def generate_url(job_title, job_location):
-    url_template = "https://ae.indeed.com/jobs?q={}&l={}"
+    url_template = "https://www.linkedin.com/jobs/search?keywords={}&location={}"
     url = url_template.format(job_title, job_location)
     return url
 
@@ -49,7 +49,7 @@ def email_jobs_file(filepath, email):
 
 def collect_job_cards_from_page(html):
     soup = BeautifulSoup(html, 'html.parser')
-    cards = soup.find_all('div', 'jobsearch-SerpJobCard')
+    cards = soup.find_all('div', 'job-search-card')
     return cards, soup
 
 
@@ -75,38 +75,37 @@ def request_jobs_from_indeed(url):
 def find_next_page(soup):
     try:
         pagination = soup.find("a", {"aria-label": "Next"}).get("href")
-        return "https://ae.indeed.com" + pagination
+        return "https://www.linkedin.com" + pagination
     except AttributeError:
         return None
 
 
 def extract_job_card_data(card):
-    atag = card.h2.a
     try:
-        job_title = atag.get('title')
+        job_title = card.find('h3','base-search-card__title').text.strip()
     except AttributeError:
         job_title = ''
     try:
-        company = card.find('span', 'company').text.strip()
+        company = card.find('a', 'job-search-card__subtitle').text.strip()
     except AttributeError:
         company = ''
     try:
-        location = card.find('div', 'recJobLoc').get('data-rc-loc')
+        location = card.find('span', 'job-search-card__location').text.strip()
     except AttributeError:
         location = ''
     try:
-        job_summary = card.find('div', 'summary').text.strip()
+        job_summary = ''
     except AttributeError:
         job_summary = ''
     try:
-        post_date = card.find('span', 'date').text.strip()
+        post_date = card.find('time', 'job-search-card__listdate').text.strip()
     except AttributeError:
         post_date = ''
     try:
-        salary = card.find('span', 'salarytext').text.strip()
+        salary = ''
     except AttributeError:
         salary = ''
-    job_url = 'https://ae.indeed.com' + atag.get('href')
+    job_url = card.find('a','base-card__full-link').get('href')
     return job_title, company, location, job_summary, salary, post_date, job_url
 
 
@@ -119,6 +118,7 @@ def main(job_title, job_location, filepath, email=None):
     while True:
         print(url)
         html = request_jobs_from_indeed(url)
+        print(html)
         if not html:
             break
         cards, soup = collect_job_cards_from_page(html)
@@ -138,9 +138,9 @@ def main(job_title, job_location, filepath, email=None):
 
 if __name__ == '__main__':
     # job search settings
-    title = 'office assistant'
+    title = 'flutter'
     loc = ''
-    path = 'data_scientist_jobs.csv'
+    path = 'linkedin.csv'
 
     # include email settings if you want to email the file
     # currently setup for GMAIL... see notes above.
